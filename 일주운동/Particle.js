@@ -9,7 +9,7 @@ function rangeSelectionRandom(min, max) {
 class Particle {
   constructor(x, y, radius, cycleRadius) {
     this.position = new Vector(x, y);
-    this.speed = 0.005;
+    this.speed = 0.005 + Math.random() * 0.004;
     this.radians = 0;
     this.originX = x;
     this.originY = y;
