@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magnifier and Color Picker</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        padding: 1rem;
+        height: 18rem;
+      }
+
+      svg body {
+        padding: 0;
+      }
+
+      * {
+        font-family: "Quicksand", sans-serif;
+        font-weight: 300;
+      }
+      section:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+      section > *:first-child {
+        margin-top: 0;
+      }
+      section > *:last-child {
+        margin-bottom: 0;
+      }
+      section img {
+        float: left;
+        margin-right: 1rem;
+        clip-path: polygon(0 0, 0% 100%, 50% 0);
+        shape-outside: polygon(0 0, 0% 100%, 50% 0);
+        width: 7rem;
+        height: 7rem;
+      }
+      p:first-letter {
+        font-weight: bold;
+        font-size: 3rem;
+      }
+      a {
+        color: blue;
+        text-decoration: underline;
+      }
+      del {
+        background-image: url("./assets/img.jpg");
+        text-decoration: none;
+        background-size: 100%;
+        background-repeat: repeat-x;
+      }
+      img {
+        box-shadow: 0 0 1rem #ddd;
+      }
+    </style>
+    <link
+      data-font=""
+      href="https://fonts.googleapis.com/css?family=Quicksand:300,500"
+      rel="stylesheet"
+    />
+    <script src="index.js"></script>
+  </head>
+  <body>
+    <button id="asd">to img</button>
+  </body>
+</html>
