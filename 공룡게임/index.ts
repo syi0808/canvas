@@ -1,5 +1,13 @@
 import Character from "./Character";
 
+function randomPercent(percent: number) {
+  return Math.ceil(Math.random() * (100 / percent)) === 1;
+}
+
+function randomLength(max: number) {
+  return Math.round(Math.random() * (max - 1) + 1);
+}
+
 class Entity {
   x: number;
   y: number;
@@ -21,14 +29,15 @@ class App {
   stageHeight: number;
   x: number;
   pixelRatio: number;
-  Land: Land;
+  land: Land;
+  walkSceneNunber: number;
   constructor() {
     this.canvas = document.createElement("canvas");
     document.body.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d");
     this.pixelRatio = 3;
     this.character = new Character(this.ctx, this.pixelRatio);
-    this.Land = new Land(this.ctx, this.pixelRatio);
+    this.land = new Land(this.ctx, this.pixelRatio);
     this.init();
     this.x = 0;
     this.character.draw(0, 0);
@@ -47,7 +56,7 @@ class App {
   draw() {
     this.ctx.clearRect(0, 0, this.stageWidth, this.stageHeight);
     this.x += 0.2;
-    this.Land.draw();
+    this.land.draw();
     this.character.draw(this.x, 0);
     window.requestAnimationFrame(this.draw.bind(this));
   }
@@ -73,39 +82,47 @@ class Land {
   y: number;
   isHill: boolean;
   isUphill: boolean;
-  LandArray: Vector[];
+  landArray: Vector[];
   hillLength: number;
   hillMaxHeight: number;
+  defaultHeight: number;
+  height: number;
   constructor(ctx, pixelRatio) {
     this.pixelRatio = pixelRatio;
     this.ctx = ctx;
     this.isHill = false;
     this.isUphill = false;
     this.hillLength = 0;
-    this.LandArray = [];
-    this.hillMaxHeight = 4;
+    this.landArray = [];
+    this.defaultHeight = 100;
+    this.hillMaxHeight = 96;
+    this.height = this.defaultHeight;
   }
   draw() {
-    // 만약 언덕이라면
     if (this.isHill) {
-      // 만약 오르막 이라면
       if (this.isUphill) {
-        if (this.LandArray[this.LandArray.length - 1].y >= this.hillMaxHeight) {
-          this.isUphill = false;
-          return;
+        this.height -= 1;
+        if (this.height <= this.hillMaxHeight) {
+          this.height += 1;
+          if (this.hillLength <= 0) {
+            this.isUphill = false;
+          }
+          this.hillLength -= 1;
         }
-      } // 만약 내리막 이라면
-      else {
-        return;
+      } else {
+        this.height += 1;
+        if (this.height >= this.defaultHeight) {
+          this.isHill = false;
+        }
       }
     }
-    this.LandArray.push({ x: 10, y: 10 });
-    this.LandArray.forEach((vector: Vector, index: number) => {
+    this.landArray.push({ x: document.body.clientWidth, y: this.height });
+    this.landArray.forEach((vector, index) => {
       if (vector.x < 0) {
-        this.LandArray.shift();
+        this.landArray.shift();
         return;
       }
-      this.LandArray[index].x = vector.x - this.pixelRatio;
+      this.landArray[index].x = vector.x - this.pixelRatio;
       this.ctx.fillRect(
         vector.x - this.pixelRatio,
         vector.y,
@@ -113,10 +130,52 @@ class Land {
         this.pixelRatio
       );
     });
-    if (Math.round(Math.random() * 10) === 5) {
+    //Math.round(Math.random() * 300) === 5
+    if (randomPercent(0.5)) {
       this.isHill = true;
-      this.hillLength = Math.round(Math.random() * 4) + 1;
-      return;
+      this.isUphill = true;
+      this.hillMaxHeight = 95 + Math.round(Math.random() * 3);
+      this.hillLength = Math.round(Math.random() * 2) + 1;
+    }
+  }
+}
+
+class Dust {
+  pixelRatio: number;
+  ctx: CanvasRenderingContext2D;
+  dustArray: Vector[];
+  dustLength: number;
+  isDust: boolean;
+  dustHeight: number;
+  constructor(ctx, pixelRatio) {
+    this.dustArray = [];
+    this.pixelRatio = pixelRatio;
+    this.ctx = ctx;
+  }
+
+  draw() {
+    this.dustArray.forEach((vector: Vector, index: number) => {
+      if (vector.x === 0 && vector.y === 0) return;
+      this.dustArray[index].x = vector.x - this.pixelRatio;
+      this.ctx.fillRect(
+        vector.x - this.pixelRatio,
+        vector.y,
+        this.pixelRatio,
+        this.pixelRatio
+      );
+    });
+    if (this.isDust) {
+      this.dustArray.push({
+        x: document.body.clientWidth,
+        y: this.dustHeight + 96,
+      });
+    } else {
+      this.dustArray.push({ x: 0, y: 0 });
+      if (randomPercent(5)) {
+        this.isDust = true;
+        this.dustLength = Math.round(Math.random() * 4 + 1);
+        this.dustHeight = Math.round(Math.random() * 6 + 1);
+      }
     }
   }
 }

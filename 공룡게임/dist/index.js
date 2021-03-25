@@ -49,16 +49,13 @@ class Land {
     this.isHill = false;
     this.isUphill = false;
     this.hillLength = 0;
-    this.hillMaxLength = 4;
     this.LandArray = [];
     this.defaultHeight = 100;
     this.hillMaxHeight = 96;
     this.height = this.defaultHeight;
   }
   draw() {
-    // 만약 언덕이라면
     if (this.isHill) {
-      // 만약 오르막 이라면
       if (this.isUphill) {
         this.height -= 1;
         if (this.height <= this.hillMaxHeight) {
@@ -68,8 +65,7 @@ class Land {
           }
           this.hillLength -= 1;
         }
-      } // 만약 내리막 이라면
-      else {
+      } else {
         this.height += 1;
         if (this.height >= this.defaultHeight) {
           this.isHill = false;
