@@ -1,11 +1,18 @@
 import Character from "./Character";
 
-function randomPercent(percent: number) {
+function randomPercent(percent: number): boolean {
   return Math.ceil(Math.random() * (100 / percent)) === 1;
 }
 
-function randomLength(max: number) {
-  return Math.round(Math.random() * (max - 1) + 1);
+function randomLength(max: number, min: number, pixelRatio: number): number {
+  const pixelMax: number = max * pixelRatio;
+  const pixelMin: number = min * pixelRatio;
+  const randomMax: number = pixelMax - pixelMin;
+  return Math.round(Math.random() * randomMax) + pixelMin;
+}
+
+function pixelConvert(number: number, pixelRatio: number): number {
+  return number * pixelRatio;
 }
 
 class Entity {
@@ -23,14 +30,15 @@ class Entity {
 
 class App {
   character: Character;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+  dust: Dust;
+  land: Land;
   stageWidth: number;
   stageHeight: number;
   x: number;
   pixelRatio: number;
-  land: Land;
   walkSceneNunber: number;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
   constructor() {
     this.canvas = document.createElement("canvas");
     document.body.appendChild(this.canvas);
@@ -38,6 +46,7 @@ class App {
     this.pixelRatio = 3;
     this.character = new Character(this.ctx, this.pixelRatio);
     this.land = new Land(this.ctx, this.pixelRatio);
+    this.dust = new Dust(this.ctx, this.pixelRatio);
     this.init();
     this.x = 0;
     this.character.draw(0, 0);
@@ -57,6 +66,7 @@ class App {
     this.ctx.clearRect(0, 0, this.stageWidth, this.stageHeight);
     this.x += 0.2;
     this.land.draw();
+    this.dust.draw();
     this.character.draw(this.x, 0);
     window.requestAnimationFrame(this.draw.bind(this));
   }
@@ -78,15 +88,15 @@ interface Vector {
 
 class Land {
   pixelRatio: number;
-  ctx: CanvasRenderingContext2D;
   y: number;
-  isHill: boolean;
-  isUphill: boolean;
-  landArray: Vector[];
   hillLength: number;
   hillMaxHeight: number;
   defaultHeight: number;
   height: number;
+  isHill: boolean;
+  isUphill: boolean;
+  ctx: CanvasRenderingContext2D;
+  landArray: Vector[];
   constructor(ctx, pixelRatio) {
     this.pixelRatio = pixelRatio;
     this.ctx = ctx;
@@ -142,11 +152,11 @@ class Land {
 
 class Dust {
   pixelRatio: number;
+  dustLength: number;
+  dustHeight: number;
+  isDust: boolean;
   ctx: CanvasRenderingContext2D;
   dustArray: Vector[];
-  dustLength: number;
-  isDust: boolean;
-  dustHeight: number;
   constructor(ctx, pixelRatio) {
     this.dustArray = [];
     this.pixelRatio = pixelRatio;
@@ -155,7 +165,7 @@ class Dust {
 
   draw() {
     this.dustArray.forEach((vector: Vector, index: number) => {
-      if (vector.x === 0 && vector.y === 0) return;
+      if (vector.x === -1 && vector.y === -1) return;
       this.dustArray[index].x = vector.x - this.pixelRatio;
       this.ctx.fillRect(
         vector.x - this.pixelRatio,
@@ -164,17 +174,28 @@ class Dust {
         this.pixelRatio
       );
     });
+    if (this.dustLength < 0 && this.isDust) {
+      this.isDust = false;
+      return;
+    } else if (this.isDust) {
+      this.dustLength -= 1;
+    }
     if (this.isDust) {
       this.dustArray.push({
         x: document.body.clientWidth,
-        y: this.dustHeight + 96,
+        y: this.dustHeight,
       });
     } else {
-      this.dustArray.push({ x: 0, y: 0 });
-      if (randomPercent(5)) {
+      this.dustArray.push({ x: -1, y: -1 });
+      if (randomPercent(1)) {
         this.isDust = true;
-        this.dustLength = Math.round(Math.random() * 4 + 1);
-        this.dustHeight = Math.round(Math.random() * 6 + 1);
+        this.dustLength =
+          Math.round(Math.random() * pixelConvert(3, this.pixelRatio)) +
+          pixelConvert(1, this.pixelRatio);
+        this.dustHeight =
+          100 +
+          Math.round(Math.random() * pixelConvert(5, this.pixelRatio)) +
+          pixelConvert(2, this.pixelRatio);
       }
     }
   }
