@@ -243,3 +243,14 @@ chrome.runtime.sendMessage({ msg: "capture" }, function (response) {
   temp.style.height = "100%";
   document.body.appendChild(temp);
 });
+
+function rgbToHex(r, g, b) {
+  const red =
+    r.toString(16).length <= 1 ? "0" + r.toString(16) : r.toString(16);
+  const green =
+    g.toString(16).length <= 1 ? "0" + g.toString(16) : g.toString(16);
+  const blue =
+    b.toString(16).length <= 1 ? "0" + b.toString(16) : b.toString(16);
+
+  return red + green + blue;
+}
