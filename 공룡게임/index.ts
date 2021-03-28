@@ -44,7 +44,7 @@ class App {
         document.body.appendChild(this.canvas);
         this.ctx = this.canvas.getContext("2d");
         this.pixelRatio = 3;
-        this.character = new Character(this.ctx, this.pixelRatio, 0, 0);
+        this.character = new Character(this.ctx, this.pixelRatio, 0, 30);
         this.land = new Land(this.ctx, this.pixelRatio);
         this.dust = new Dust(this.ctx, this.pixelRatio);
         this.init();

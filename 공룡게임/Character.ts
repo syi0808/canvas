@@ -6,12 +6,14 @@ class Character {
     isJumping: boolean;
     x: number;
     y: number;
+    defaultY: number;
     isJumpKey: boolean;
     isJumpKeyDown: boolean;
     sceneNumber: 1 | 2 | 3;
     time: number;
     fps: number;
     fpsTime: number;
+    jumpMax: number;
     constructor(ctx, pixelRatio, x, y) {
         this.pixelRatio = pixelRatio;
         this.ctx = ctx;
@@ -20,9 +22,11 @@ class Character {
         this.isJumping = false;
         this.x = x;
         this.y = y;
+        this.defaultY = y;
         this.sceneNumber = 1;
         this.fps = 10;
         this.fpsTime = 1000 / 10;
+        this.jumpMax = 50;
         window.onkeydown = (e: KeyboardEvent) => {
             if (e.keyCode === 32 && !this.isJumping) {
                 this.isJumpKeyDown = true;
@@ -41,11 +45,12 @@ class Character {
         this.y -= this.velocity;
         if (!this.isJumpKeyDown) this.velocity -= this.gravity;
         this.isJumping = true;
-        if (this.y <= -40 && this.isJumpKeyDown) this.isJumpKeyDown = false;
-        if (this.y >= 0) {
+        if (this.y <= this.defaultY - this.jumpMax && this.isJumpKeyDown)
+            this.isJumpKeyDown = false;
+        if (this.y >= this.defaultY) {
             this.isJumpKey = false;
             this.isJumping = false;
-            this.y = 0;
+            this.y = this.defaultY;
         }
     }
 
