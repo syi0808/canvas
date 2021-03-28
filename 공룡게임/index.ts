@@ -87,65 +87,75 @@ interface Vector {
     y: number;
 }
 
+interface Hill {
+    length: number;
+    height: number;
+    x: number;
+}
+
 class Land {
     pixelRatio: number;
     y: number;
     hillLength: number;
-    hillMaxHeight: number;
     defaultHeight: number;
     height: number;
-    isHill: boolean;
-    isUphill: boolean;
     ctx: CanvasRenderingContext2D;
-    landArray: Vector[];
+    landArray: Hill[];
+    speed: number;
     constructor(ctx, pixelRatio) {
         this.pixelRatio = pixelRatio;
         this.ctx = ctx;
-        this.isHill = false;
-        this.isUphill = false;
         this.hillLength = 0;
         this.landArray = [];
         this.defaultHeight = 100;
-        this.hillMaxHeight = 96;
         this.height = this.defaultHeight;
+        this.speed = 2;
     }
     draw() {
-        if (this.isHill) {
-            if (this.isUphill) {
-                this.height -= 1;
-                if (this.height <= this.hillMaxHeight) {
-                    this.height += 1;
-                    if (this.hillLength <= 0) {
-                        this.isUphill = false;
-                    }
-                    this.hillLength -= 1;
-                }
-            } else {
-                this.height += 1;
-                if (this.height >= this.defaultHeight) {
-                    this.isHill = false;
-                }
-            }
-        }
-        this.landArray.push({ x: document.body.clientWidth, y: this.height });
-        this.landArray.forEach((vector, index) => {
-            if (vector.x < 0) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, this.defaultHeight - 0.5);
+        this.ctx.lineTo(document.body.clientWidth, this.defaultHeight - 0.5);
+        this.ctx.lineWidth = this.pixelRatio;
+        this.ctx.strokeStyle = "black";
+        this.ctx.stroke();
+        this.landArray.forEach((hill, index) => {
+            if (hill.x < 0) {
                 this.landArray.shift();
                 return;
             }
-            this.landArray[index].x = vector.x - this.pixelRatio;
-            this.ctx.fillRect(
-                vector.x - this.pixelRatio,
-                vector.y,
-                this.pixelRatio,
-                this.pixelRatio
-            );
+            this.landArray[index].x = hill.x - this.speed;
+            const forLength =
+                hill.length + (this.defaultHeight - hill.height) * 2;
+            for (let i = 0; i <= forLength; i++) {
+                this.ctx.fillStyle = "black";
+                let y = this.defaultHeight - this.pixelRatio;
+                if (i <= this.defaultHeight - hill.height) y -= i;
+                else if (i <= this.defaultHeight - hill.height + hill.length)
+                    y = hill.height - this.pixelRatio;
+                else y -= forLength - i;
+                this.ctx.fillRect(
+                    hill.x + i * this.pixelRatio,
+                    y,
+                    this.pixelRatio,
+                    this.pixelRatio
+                );
+                this.ctx.fillStyle = "white";
+                for (let j = 0; j < hill.height - (hill.height - i) + 1; j++) {
+                    this.ctx.fillRect(
+                        hill.x + i * this.pixelRatio,
+                        y + j + this.pixelRatio,
+                        this.pixelRatio,
+                        this.pixelRatio
+                    );
+                }
+            }
         });
         if (randomPercent(0.5)) {
-            this.isHill = true;
-            this.isUphill = true;
-            this.hillMaxHeight = 95 + Math.round(Math.random() * 3);
-            this.hillLength = Math.round(Math.random() * 2) + 1;
+            this.landArray.push({
+                length: (this.hillLength = Math.round(Math.random() * 2) + 2),
+                height: 95 + Math.round(Math.random() * 2 + 1),
+                x: document.body.clientWidth,
+            });
         }
     }
 }
@@ -165,6 +175,7 @@ class Dust {
 
     draw() {
         this.dustArray.forEach((vector: Vector, index: number) => {
+            this.ctx.fillStyle = "black";
             if (vector.x === -1 && vector.y === -1) return;
             this.dustArray[index].x = vector.x - this.pixelRatio;
             this.ctx.fillRect(
