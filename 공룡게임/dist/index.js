@@ -75,7 +75,10 @@ class Land {
         this.ctx.strokeStyle = "black";
         this.ctx.stroke();
         this.landArray.forEach((hill, index) => {
-            if (hill.x < 0) {
+            if (
+                hill.x + hill.length + (this.defaultHeight - hill.height) * 2 <
+                0
+            ) {
                 this.landArray.shift();
                 return;
             }

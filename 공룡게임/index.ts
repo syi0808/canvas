@@ -32,6 +32,7 @@ class App {
     character: Character;
     dust: Dust;
     land: Land;
+    hurdle: Hurdle;
     stageWidth: number;
     stageHeight: number;
     x: number;
@@ -47,6 +48,7 @@ class App {
         this.character = new Character(this.ctx, this.pixelRatio, 0, 30);
         this.land = new Land(this.ctx, this.pixelRatio);
         this.dust = new Dust(this.ctx, this.pixelRatio);
+        this.hurdle = new Hurdle(this.ctx, this.pixelRatio);
         this.init();
         window.requestAnimationFrame(this.animate.bind(this));
     }
@@ -76,9 +78,27 @@ class App {
 class Hurdle {
     pixelRatio: number;
     number: number;
-    constructor(pixelRatio: number) {
+    ctx: CanvasRenderingContext2D;
+    hurdleArray: Vector[];
+    delay: number;
+    delayTime: number;
+    time: number;
+    constructor(ctx: CanvasRenderingContext2D, pixelRatio: number) {
         this.pixelRatio = pixelRatio;
         this.number = Math.round(Math.random() * 2) + 1;
+        this.pixelRatio = pixelRatio;
+        this.ctx = ctx;
+        this.delay = 3;
+        this.delayTime = 1000 * this.delay;
+    }
+
+    draw(t: number) {
+        if (!this.time) this.time = t;
+        const now = t - this.time;
+        if (now > this.delayTime) {
+            this.time = t;
+            this.hurdleArray.push({ x: document.body.clientWidth, y: 100 });
+        }
     }
 }
 
