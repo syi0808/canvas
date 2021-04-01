@@ -1,4 +1,5 @@
 import Character from "./Character";
+import Hurdle from "./Hurdle";
 
 function randomPercent(percent: number): boolean {
     return Math.ceil(Math.random() * (100 / percent)) === 1;
@@ -8,7 +9,7 @@ function randomLength(max: number, min: number, pixelRatio: number): number {
     const pixelMax: number = max * pixelRatio;
     const pixelMin: number = min * pixelRatio;
     const randomMax: number = pixelMax - pixelMin;
-    return Math.round(Math.random() * randomMax) + pixelMin;
+    return Math.ceil(Math.random() * randomMax) + pixelMin;
 }
 
 function pixelConvert(number: number, pixelRatio: number): number {
@@ -68,37 +69,11 @@ class App {
 
     animate(t: number) {
         this.draw();
-        this.land.draw();
         this.dust.draw();
+        this.hurdle.draw(t);
+        this.land.draw();
         this.character.draw(t);
         window.requestAnimationFrame(this.animate.bind(this));
-    }
-}
-
-class Hurdle {
-    pixelRatio: number;
-    number: number;
-    ctx: CanvasRenderingContext2D;
-    hurdleArray: Vector[];
-    delay: number;
-    delayTime: number;
-    time: number;
-    constructor(ctx: CanvasRenderingContext2D, pixelRatio: number) {
-        this.pixelRatio = pixelRatio;
-        this.number = Math.round(Math.random() * 2) + 1;
-        this.pixelRatio = pixelRatio;
-        this.ctx = ctx;
-        this.delay = 3;
-        this.delayTime = 1000 * this.delay;
-    }
-
-    draw(t: number) {
-        if (!this.time) this.time = t;
-        const now = t - this.time;
-        if (now > this.delayTime) {
-            this.time = t;
-            this.hurdleArray.push({ x: document.body.clientWidth, y: 100 });
-        }
     }
 }
 

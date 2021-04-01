@@ -1,4 +1,5 @@
 import Character from "./Character.js";
+import Hurdle from "./Hurdle.js";
 function randomPercent(percent) {
     return Math.ceil(Math.random() * (100 / percent)) === 1;
 }
@@ -6,7 +7,7 @@ function randomLength(max, min, pixelRatio) {
     const pixelMax = max * pixelRatio;
     const pixelMin = min * pixelRatio;
     const randomMax = pixelMax - pixelMin;
-    return Math.round(Math.random() * randomMax) + pixelMin;
+    return Math.ceil(Math.random() * randomMax) + pixelMin;
 }
 function pixelConvert(number, pixelRatio) {
     return number * pixelRatio;
@@ -29,6 +30,7 @@ class App {
         this.character = new Character(this.ctx, this.pixelRatio, 0, 30);
         this.land = new Land(this.ctx, this.pixelRatio);
         this.dust = new Dust(this.ctx, this.pixelRatio);
+        this.hurdle = new Hurdle(this.ctx, this.pixelRatio);
         this.init();
         window.requestAnimationFrame(this.animate.bind(this));
     }
@@ -45,16 +47,11 @@ class App {
     }
     animate(t) {
         this.draw();
-        this.land.draw();
         this.dust.draw();
+        this.hurdle.draw(t);
+        this.land.draw();
         this.character.draw(t);
         window.requestAnimationFrame(this.animate.bind(this));
-    }
-}
-class Hurdle {
-    constructor(pixelRatio) {
-        this.pixelRatio = pixelRatio;
-        this.number = Math.round(Math.random() * 2) + 1;
     }
 }
 class Land {
@@ -65,7 +62,7 @@ class Land {
         this.landArray = [];
         this.defaultHeight = 100;
         this.height = this.defaultHeight;
-        this.speed = 2;
+        this.speed = 10;
     }
     draw() {
         this.ctx.beginPath();
@@ -75,10 +72,7 @@ class Land {
         this.ctx.strokeStyle = "black";
         this.ctx.stroke();
         this.landArray.forEach((hill, index) => {
-            if (
-                hill.x + hill.length + (this.defaultHeight - hill.height) * 2 <
-                0
-            ) {
+            if (hill.x < 0) {
                 this.landArray.shift();
                 return;
             }

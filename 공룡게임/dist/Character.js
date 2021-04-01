@@ -11,7 +11,7 @@ class Character {
         this.sceneNumber = 1;
         this.fps = 10;
         this.fpsTime = 1000 / 10;
-        this.jumpMax = 40;
+        this.jumpMax = 50;
         window.onkeydown = (e) => {
             if (e.keyCode === 32 && !this.isJumping) {
                 this.isJumpKeyDown = true;
@@ -21,13 +21,16 @@ class Character {
             }
         };
         window.onkeyup = (e) => {
-            if (e.keyCode === 32) this.isJumpKeyDown = false;
+            if (e.keyCode === 32)
+                this.isJumpKeyDown = false;
         };
     }
     jump() {
-        if (!this.isJumpKey) return;
+        if (!this.isJumpKey)
+            return;
         this.y -= this.velocity;
-        if (!this.isJumpKeyDown) this.velocity -= this.gravity;
+        if (!this.isJumpKeyDown)
+            this.velocity -= this.gravity;
         this.isJumping = true;
         if (this.y <= this.defaultY - this.jumpMax && this.isJumpKeyDown)
             this.isJumpKeyDown = false;
@@ -38,7 +41,8 @@ class Character {
         }
     }
     draw(t) {
-        if (!this.time) this.time = t;
+        if (!this.time)
+            this.time = t;
         this.jump();
         const x = this.x;
         const y = this.y;
@@ -59,7 +63,8 @@ class Character {
         if (now > this.fpsTime && !this.isJumpKey) {
             this.time = t;
             this.sceneNumber += 1;
-            if (this.sceneNumber > 3) this.sceneNumber = 2;
+            if (this.sceneNumber > 3)
+                this.sceneNumber = 2;
         }
     }
     pause(x, y) {
