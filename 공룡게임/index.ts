@@ -23,7 +23,6 @@ class Entity {
         this.x = x;
         this.y = y;
     }
-
     draw(ctx, x, y, pixelRatio) {
         const pr = pixelRatio;
     }
@@ -41,17 +40,22 @@ class App {
     walkSceneNunber: number;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
+    isGameOver: boolean;
+    animationFrame: ReturnType<typeof window.requestAnimationFrame>;
     constructor() {
         this.canvas = document.createElement("canvas");
         document.body.appendChild(this.canvas);
         this.ctx = this.canvas.getContext("2d");
         this.pixelRatio = 3;
-        this.character = new Character(this.ctx, this.pixelRatio, 0, 30);
+        this.character = new Character(this.ctx, this.pixelRatio, 100, 30);
         this.land = new Land(this.ctx, this.pixelRatio);
         this.dust = new Dust(this.ctx, this.pixelRatio);
-        this.hurdle = new Hurdle(this.ctx, this.pixelRatio);
+        this.isGameOver = false;
+        this.hurdle = new Hurdle(this.ctx, this.pixelRatio, this.gameOver);
         this.init();
-        window.requestAnimationFrame(this.animate.bind(this));
+        this.animationFrame = window.requestAnimationFrame(
+            this.animate.bind(this)
+        );
     }
 
     init() {
@@ -68,12 +72,24 @@ class App {
     }
 
     animate(t: number) {
+        if (this.isGameOver) {
+            window.location.reload();
+            return;
+        }
         this.draw();
         this.dust.draw();
-        this.hurdle.draw(t);
+        this.hurdle.draw(t, this.character.x, this.character.y);
         this.land.draw();
         this.character.draw(t);
-        window.requestAnimationFrame(this.animate.bind(this));
+        this.animationFrame = window.requestAnimationFrame(
+            this.animate.bind(this)
+        );
+    }
+
+    gameOver() {
+        this.isGameOver = true;
+        window.cancelAnimationFrame(this.animationFrame);
+        alert("게임 오버");
     }
 }
 
@@ -86,6 +102,12 @@ interface Hill {
     length: number;
     height: number;
     x: number;
+}
+
+interface DustType {
+    x: number;
+    y: number;
+    length: number;
 }
 
 class Land {
@@ -104,9 +126,10 @@ class Land {
         this.landArray = [];
         this.defaultHeight = 100;
         this.height = this.defaultHeight;
-        this.speed = 2;
+        this.speed = 4;
     }
     draw() {
+        this.speed += 0.001;
         this.ctx.beginPath();
         this.ctx.moveTo(0, this.defaultHeight - 0.5);
         this.ctx.lineTo(document.body.clientWidth, this.defaultHeight - 0.5);
@@ -157,55 +180,43 @@ class Land {
 
 class Dust {
     pixelRatio: number;
-    dustLength: number;
-    dustHeight: number;
-    isDust: boolean;
     ctx: CanvasRenderingContext2D;
-    dustArray: Vector[];
+    dustArray: DustType[];
+    speed: number;
     constructor(ctx, pixelRatio) {
         this.dustArray = [];
         this.pixelRatio = pixelRatio;
         this.ctx = ctx;
+        this.speed = 4;
     }
 
     draw() {
-        this.dustArray.forEach((vector: Vector, index: number) => {
+        this.speed += 0.001;
+        this.dustArray.forEach((vector: DustType, index: number) => {
             this.ctx.fillStyle = "black";
             if (vector.x === -1 && vector.y === -1) return;
-            this.dustArray[index].x = vector.x - this.pixelRatio;
+            this.dustArray[index].x = vector.x - this.speed;
             this.ctx.fillRect(
-                vector.x - this.pixelRatio,
+                vector.x - this.speed,
                 vector.y,
-                this.pixelRatio,
+                this.pixelRatio * vector.length,
                 this.pixelRatio
             );
         });
-        if (this.dustLength < 0 && this.isDust) {
-            this.isDust = false;
-            return;
-        } else if (this.isDust) {
-            this.dustLength -= 1;
-        }
-        if (this.isDust) {
+        if (randomPercent(1)) {
             this.dustArray.push({
                 x: document.body.clientWidth,
-                y: this.dustHeight,
-            });
-        } else {
-            this.dustArray.push({ x: -1, y: -1 });
-            if (randomPercent(1)) {
-                this.isDust = true;
-                this.dustLength =
-                    Math.round(
-                        Math.random() * pixelConvert(3, this.pixelRatio)
-                    ) + pixelConvert(1, this.pixelRatio);
-                this.dustHeight =
+                y:
                     100 +
                     Math.round(
                         Math.random() * pixelConvert(5, this.pixelRatio)
                     ) +
-                    pixelConvert(2, this.pixelRatio);
-            }
+                    pixelConvert(2, this.pixelRatio),
+                length:
+                    Math.round(
+                        Math.random() * pixelConvert(3, this.pixelRatio)
+                    ) + pixelConvert(1, this.pixelRatio),
+            });
         }
     }
 }
