@@ -31,7 +31,7 @@ class App {
         this.land = new Land(this.ctx, this.pixelRatio);
         this.dust = new Dust(this.ctx, this.pixelRatio);
         this.isGameOver = false;
-        this.hurdle = new Hurdle(this.ctx, this.pixelRatio, this.gameOver);
+        this.hurdle = new Hurdle(this.ctx, this.pixelRatio);
         this.init();
         this.animationFrame = window.requestAnimationFrame(
             this.animate.bind(this)
@@ -49,8 +49,9 @@ class App {
         this.x += 0.2;
     }
     animate(t) {
-        if (this.isGameOver) {
-            window.location.reload();
+        if (this.hurdle.isGameOver) {
+            window.cancelAnimationFrame(this.animationFrame);
+            alert("게임 오버");
             return;
         }
         this.draw();
@@ -61,11 +62,6 @@ class App {
         this.animationFrame = window.requestAnimationFrame(
             this.animate.bind(this)
         );
-    }
-    gameOver() {
-        this.isGameOver = true;
-        window.cancelAnimationFrame(this.animationFrame);
-        alert("게임 오버");
     }
 }
 class Land {

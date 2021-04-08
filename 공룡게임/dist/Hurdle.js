@@ -1,5 +1,5 @@
 class Hurdle {
-    constructor(ctx, pixelRatio, toggleGame) {
+    constructor(ctx, pixelRatio) {
         this.pixelRatio = pixelRatio;
         this.number = Math.round(Math.random() * 2) + 1;
         this.pixelRatio = pixelRatio;
@@ -8,7 +8,7 @@ class Hurdle {
         this.delayTime = 1000 * this.delay;
         this.hurdleArray = [];
         this.speed = 4;
-        this.toggleGame = toggleGame;
+        this.isGameOver = false;
     }
     draw(t, characterX, characterY) {
         this.speed += 0.001;
@@ -29,7 +29,7 @@ class Hurdle {
             if (vector.x <= characterX + 42 &&
                 characterY >= 4 &&
                 characterX <= vector.x + 42) {
-                this.toggleGame();
+                this.isGameOver = true;
                 return;
             }
             if (vector.x < 0) {
