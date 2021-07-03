@@ -12,9 +12,10 @@ window.onload = () => {
 class App {
     constructor() {
         this.canvas = document.createElement("canvas");
-        document.body.appendChild(this.canvas);
+        document.getElementById("paletteWrapper").appendChild(this.canvas);
         this.canvas.setAttribute("id", "palette");
         this.ctx = this.canvas.getContext("2d");
+        this.color = "#ff00ff";
 
         this.init();
     }
@@ -25,11 +26,13 @@ class App {
         this.canvas.width = this.stageWidth;
         this.canvas.height = this.stageHeight;
         this.createPalette();
-        this.gradientSlider = new GradientSlider();
+        this.gradientSlider = new GradientSlider(this.changeColor.bind(this));
     }
 
     createPalette() {
-        this.ctx.fillStyle = "red";
+        this.ctx.clearRect(0, 0, this.stageWidth, this.stageHeight);
+
+        this.ctx.fillStyle = this.color;
         this.ctx.fillRect(0, 0, this.stageWidth, this.stageHeight);
 
         const whiteGradient = this.ctx.createLinearGradient(
@@ -54,14 +57,22 @@ class App {
         this.ctx.fillStyle = blackGradient;
         this.ctx.fillRect(0, 0, this.stageWidth, this.stageHeight);
     }
+
+    changeColor(color) {
+        this.color = color;
+        this.createPalette();
+    }
 }
 
 class GradientSlider {
-    constructor() {
+    constructor(props) {
         this.canvas = document.createElement("canvas");
         this.canvas.setAttribute("id", "gradient-slider");
-        document.body.appendChild(this.canvas);
+        document.getElementById("paletteWrapper").appendChild(this.canvas);
         this.ctx = this.canvas.getContext("2d");
+        this.clicked = false;
+
+        this.changeColor = props;
 
         this.init();
     }
@@ -72,6 +83,25 @@ class GradientSlider {
         this.canvas.width = this.stageWidth;
         this.canvas.height = this.stageHeight;
         this.createGradientSlider();
+
+        this.canvas.addEventListener("mousedown", () => {
+            this.clicked = true;
+        });
+        this.canvas.addEventListener("mouseup", () => {
+            this.clicked = false;
+        });
+        this.canvas.addEventListener("mousemove", this.move.bind(this));
+    }
+
+    move(e) {
+        if (!this.clicked) return;
+        const [r, g, b] = this.ctx.getImageData(
+            e.offsetX,
+            e.offsetY,
+            1,
+            1
+        ).data;
+        this.changeColor(rgbToHex(r, g, b));
     }
 
     createGradientSlider() {
@@ -93,6 +123,13 @@ class GradientSlider {
     }
 }
 
-window.onload = () => {
-    new App();
-};
+function rgbToHex(r, g, b) {
+    const red =
+        r.toString(16).length <= 1 ? "0" + r.toString(16) : r.toString(16);
+    const green =
+        g.toString(16).length <= 1 ? "0" + g.toString(16) : g.toString(16);
+    const blue =
+        b.toString(16).length <= 1 ? "0" + b.toString(16) : b.toString(16);
+
+    return "#" + red + green + blue;
+}

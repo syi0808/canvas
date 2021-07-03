@@ -87,7 +87,13 @@ window.onload = () => {
 };
 
 chrome.runtime.sendMessage({ msg: "capture" }, function (response) {
-    console.log(response.imgSrc);
+    const backup = document.body.innerHTML;
+    const currentScroll =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+    document.body.innerHTML = "";
     const temp = document.createElement("img");
     temp.src = response.imgSrc;
     temp.style.position = "absolute";
@@ -96,6 +102,10 @@ chrome.runtime.sendMessage({ msg: "capture" }, function (response) {
     temp.style.width = "100%";
     temp.style.height = "100%";
     document.body.appendChild(temp);
+    document.body.addEventListener("contextmenu", () => {
+        document.body.innerHTML = backup;
+        window.scrollTo({ top: currentScroll });
+    });
 });
 
 function rgbToHex(r, g, b) {
