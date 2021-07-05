@@ -15,7 +15,7 @@ class App {
         document.getElementById("paletteWrapper").appendChild(this.canvas);
         this.canvas.setAttribute("id", "palette");
         this.ctx = this.canvas.getContext("2d");
-        this.color = "#ff00ff";
+        this.color = "#ff0000";
 
         this.init();
     }
@@ -95,31 +95,30 @@ class GradientSlider {
         this.drawGradientSlider();
         this.createMovePoint();
 
-        this.wrapper.addEventListener("mousedown", () => {
+        this.wrapper.addEventListener("mousedown", (e) => {
             this.clicked = true;
+            this.move(e);
         });
         window.addEventListener("mouseup", () => {
             this.clicked = false;
         });
-        this.wrapper.addEventListener("mousemove", this.move.bind(this));
+        window.addEventListener("mousemove", this.move.bind(this));
     }
 
     move(e) {
         if (!this.clicked) return;
-        if (e.target === this.circle || e.target === this.movePoint)
-            this.y = e.clientY - getDisTop(this.wrapper) - this.radius;
-        else this.y = this.y = e.offsetY - this.radius;
-        if (
-            this.y + this.radius <= 0 ||
-            this.y + this.radius >= this.stageHeight
-        )
+        this.y = e.clientY - getDisTop(this.wrapper) - this.radius;
+        if (this.y + this.radius < 0 || this.y + this.radius > this.stageHeight)
             return;
-        const [r, g, b] = this.ctx.getImageData(
-            this.stageWidth / 2,
-            this.y + this.radius,
-            1,
-            1
-        ).data;
+        // const [r, g, b] = this.ctx.getImageData(
+        //     (this.stageWidth - this.width) / 2,
+        //     this.y + this.radius,
+        //     1,
+        //     1
+        // ).data;
+        const [r, g, b] = spectrumPercentToRgb(
+            (this.y + this.radius) / this.stageHeight
+        );
         this.changeColor(rgbToHex(r, g, b));
         this.drawMovePoint(rgbToHex(r, g, b));
     }
@@ -181,6 +180,27 @@ class GradientSlider {
     }
 }
 
+// class Util {
+//     static rgbToHex(r, g, b) {
+//         const red =
+//             r.toString(16).length <= 1 ? "0" + r.toString(16) : r.toString(16);
+//         const green =
+//             g.toString(16).length <= 1 ? "0" + g.toString(16) : g.toString(16);
+//         const blue =
+//             b.toString(16).length <= 1 ? "0" + b.toString(16) : b.toString(16);
+
+//         return "#" + red + green + blue;
+//     }
+
+//     static getDisTop(target) {
+//         return target.getBoundingClientRect().top;
+//     }
+
+//     static percentToColor() {
+
+//     }
+// }
+
 function rgbToHex(r, g, b) {
     const red =
         r.toString(16).length <= 1 ? "0" + r.toString(16) : r.toString(16);
@@ -194,4 +214,33 @@ function rgbToHex(r, g, b) {
 
 function getDisTop(target) {
     return target.getBoundingClientRect().top;
+}
+
+function hslToRgb(h, s, l) {
+    let r, g, b;
+
+    if (s == 0) {
+        r = g = b = l;
+    } else {
+        const hue2rgb = function hue2rgb(p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+function spectrumPercentToRgb(percent) {
+    return hslToRgb(1 - percent, 1, 0.5);
 }
