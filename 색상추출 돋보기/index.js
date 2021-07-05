@@ -25,11 +25,11 @@ class App {
         this.stageHeight = 300;
         this.canvas.width = this.stageWidth;
         this.canvas.height = this.stageHeight;
-        this.createPalette();
+        this.drawPalette();
         this.gradientSlider = new GradientSlider(this.changeColor.bind(this));
     }
 
-    createPalette() {
+    drawPalette() {
         this.ctx.clearRect(0, 0, this.stageWidth, this.stageHeight);
 
         this.ctx.fillStyle = this.color;
@@ -60,7 +60,7 @@ class App {
 
     changeColor(color) {
         this.color = color;
-        this.createPalette();
+        this.drawPalette();
     }
 }
 
@@ -68,8 +68,17 @@ class GradientSlider {
     constructor(props) {
         this.canvas = document.createElement("canvas");
         this.canvas.setAttribute("id", "gradient-slider");
-        document.getElementById("paletteWrapper").appendChild(this.canvas);
+        this.wrapper = document.createElement("div");
+        this.wrapper.style.position = "relative";
+        this.wrapper.appendChild(this.canvas);
+        document.getElementById("paletteWrapper").appendChild(this.wrapper);
         this.ctx = this.canvas.getContext("2d");
+
+        this.width = 10;
+        this.radius = 12;
+
+        this.y = 0;
+
         this.clicked = false;
 
         this.changeColor = props;
@@ -78,33 +87,77 @@ class GradientSlider {
     }
 
     init() {
-        this.stageWidth = 20;
+        this.stageWidth = 30;
         this.stageHeight = 300;
         this.canvas.width = this.stageWidth;
         this.canvas.height = this.stageHeight;
-        this.createGradientSlider();
 
-        this.canvas.addEventListener("mousedown", () => {
+        this.drawGradientSlider();
+        this.createMovePoint();
+
+        this.wrapper.addEventListener("mousedown", () => {
             this.clicked = true;
         });
-        this.canvas.addEventListener("mouseup", () => {
+        window.addEventListener("mouseup", () => {
             this.clicked = false;
         });
-        this.canvas.addEventListener("mousemove", this.move.bind(this));
+        this.wrapper.addEventListener("mousemove", this.move.bind(this));
     }
 
     move(e) {
         if (!this.clicked) return;
+        if (e.target === this.circle || e.target === this.movePoint)
+            this.y = e.clientY - getDisTop(this.wrapper) - this.radius;
+        else this.y = this.y = e.offsetY - this.radius;
+        if (
+            this.y + this.radius <= 0 ||
+            this.y + this.radius >= this.stageHeight
+        )
+            return;
         const [r, g, b] = this.ctx.getImageData(
-            e.offsetX,
-            e.offsetY,
+            this.stageWidth / 2,
+            this.y + this.radius,
             1,
             1
         ).data;
         this.changeColor(rgbToHex(r, g, b));
+        this.drawMovePoint(rgbToHex(r, g, b));
     }
 
-    createGradientSlider() {
+    createMovePoint() {
+        this.movePoint = document.createElement("div");
+        this.circle = document.createElement("div");
+
+        this.circle.appendChild(this.movePoint);
+
+        this.wrapper.appendChild(this.circle);
+
+        this.circle.style.position = "absolute";
+        this.circle.style.display = "flex";
+        this.circle.style.alignItems = "center";
+        this.circle.style.justifyContent = "center";
+        this.circle.style.width = `${this.radius * 2}px`;
+        this.circle.style.height = `${this.radius * 2}px`;
+        this.circle.style.borderRadius = "50%";
+        this.circle.style.right = "3px";
+        this.circle.style.top = 0;
+        this.circle.style.cursor = "pointer";
+        this.circle.style.background = "white";
+        this.circle.style.transform = `translateY(${-this.radius}px)`;
+        this.movePoint.style.background = "red";
+        this.movePoint.style.width = `${this.radius}px`;
+        this.movePoint.style.height = `${this.radius}px`;
+        this.movePoint.style.borderRadius = "50%";
+    }
+
+    drawMovePoint(color) {
+        this.circle.style.transform = `translateY(${this.y}px)`;
+        this.movePoint.style.background = color || "white";
+    }
+
+    drawGradientSlider() {
+        this.ctx.beginPath();
+        this.ctx.clearRect(0, 0, this.stageWidth, this.stageHeight);
         const gradient = this.ctx.createLinearGradient(
             0,
             0,
@@ -119,7 +172,12 @@ class GradientSlider {
         gradient.addColorStop(0.83, "hsl(61.2, 100%, 50%)");
         gradient.addColorStop(1.0, "hsl(360, 100%, 50%)");
         this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.stageWidth, this.stageHeight);
+        this.ctx.fillRect(
+            (this.stageWidth - this.width) / 2,
+            0,
+            this.width,
+            this.stageHeight
+        );
     }
 }
 
@@ -132,4 +190,8 @@ function rgbToHex(r, g, b) {
         b.toString(16).length <= 1 ? "0" + b.toString(16) : b.toString(16);
 
     return "#" + red + green + blue;
+}
+
+function getDisTop(target) {
+    return target.getBoundingClientRect().top;
 }
