@@ -1,9 +1,10 @@
 window.onload = () => {
     new App();
     function asd() {
-        chrome.tabs.executeScript(null, {
-            file: "./js/index.js",
-        });
+        // chrome.tabs.executeScript(null, {
+        //     file: "./js/index.js",
+        // });
+        localStorage.setItem("qwer", JSON.stringify(["asd", "qwe"]));
     }
 
     document.getElementById("asd").addEventListener("click", asd);
@@ -22,11 +23,16 @@ class App {
 
         this.radius = 12;
 
-        this.isClick = false;
-
         this.hue = 0;
 
+        this.isClick = false;
+
         this.rgb = [255, 0, 0];
+
+        this.rdom = document.getElementById("r");
+        this.gdom = document.getElementById("g");
+        this.bdom = document.getElementById("b");
+        this.hexdom = document.getElementById("hex");
 
         this.x = 300;
         this.y = 0;
@@ -43,6 +49,7 @@ class App {
         this.gradientSlider = new GradientSlider({
             changeColor: this.changeColor.bind(this),
             changeHue: this.changeHue.bind(this),
+            changeRgb: this.changeRgbDom.bind(this),
         });
 
         this.wrapper.addEventListener("mousedown", () => {
@@ -53,6 +60,7 @@ class App {
             this.isClick = false;
         });
         this.createMovePoint();
+        if (!localStorage.getItem("qwer")) return;
     }
 
     move(e) {
@@ -117,8 +125,8 @@ class App {
         this.circle.style.transform = `translate(${this.radius}px, ${-this
             .radius}px)`;
         this.movePoint.style.background = "red";
-        this.movePoint.style.width = `${this.radius}px`;
-        this.movePoint.style.height = `${this.radius}px`;
+        this.movePoint.style.width = `${this.radius * 2 - 4}px`;
+        this.movePoint.style.height = `${this.radius * 2 - 4}px`;
         this.movePoint.style.borderRadius = "50%";
     }
 
@@ -129,6 +137,7 @@ class App {
         }px, ${this.y - this.radius}px)`;
         this.movePoint.style.background =
             `rgb(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]})` || "white";
+        this.changeRgbDom();
     }
 
     changeColor(color) {
@@ -140,10 +149,29 @@ class App {
         this.hue = hue;
         this.drawMovePoint();
     }
+
+    changeRgb(r, g, b) {
+        this.rgb = [r, g, b];
+        let [x, y, hue] = rgbToPos(r, g, b);
+        if (hue === 1) hue = 0;
+        this.hue = hue * 360;
+        this.gradientSlider.y = hue * 300 - this.radius;
+        this.gradientSlider.move();
+        this.x = x;
+        this.y = y;
+        this.drawMovePoint();
+    }
+
+    changeRgbDom() {
+        this.rdom.value = this.rgb[0];
+        this.gdom.value = this.rgb[1];
+        this.bdom.value = this.rgb[2];
+        this.hexdom.innerText = rgbToHex(this.rgb[0], this.rgb[1], this.rgb[2]);
+    }
 }
 
 class GradientSlider {
-    constructor({ changeColor, changeHue }) {
+    constructor({ changeColor, changeHue, changeRgb }) {
         this.canvas = document.createElement("canvas");
         this.canvas.setAttribute("id", "gradient-slider");
         this.wrapper = document.createElement("div");
@@ -152,6 +180,8 @@ class GradientSlider {
         this.wrapper.appendChild(this.canvas);
         document.getElementById("paletteWrapper").appendChild(this.wrapper);
         this.ctx = this.canvas.getContext("2d");
+        this.movePoint = document.createElement("div");
+        this.circle = document.createElement("div");
 
         this.width = 10;
         this.radius = 12;
@@ -162,6 +192,7 @@ class GradientSlider {
 
         this.changeColor = changeColor;
         this.changeHue = changeHue;
+        this.changeRgb = changeRgb;
 
         this.init();
     }
@@ -186,8 +217,8 @@ class GradientSlider {
     }
 
     move(e) {
-        if (!this.clicked) return;
-        this.y = e.clientY - getDisTop(this.wrapper) - this.radius;
+        if (!this.clicked && e) return;
+        if (e) this.y = e.clientY - getDisTop(this.wrapper) - this.radius;
         if (this.y + this.radius < 0 || this.y + this.radius > this.stageHeight)
             return;
         const huePercent = (this.y + this.radius) / this.stageHeight;
@@ -201,12 +232,10 @@ class GradientSlider {
         this.changeHue(360 - huePercent * 360);
         this.changeColor(rgbToHex(r, g, b));
         this.drawMovePoint(rgbToHex(r, g, b));
+        this.changeRgb();
     }
 
     createMovePoint() {
-        this.movePoint = document.createElement("div");
-        this.circle = document.createElement("div");
-
         this.circle.appendChild(this.movePoint);
 
         this.wrapper.appendChild(this.circle);
@@ -224,8 +253,8 @@ class GradientSlider {
         this.circle.style.background = "white";
         this.circle.style.transform = `translateY(${-this.radius}px)`;
         this.movePoint.style.background = "red";
-        this.movePoint.style.width = `${this.radius}px`;
-        this.movePoint.style.height = `${this.radius}px`;
+        this.movePoint.style.width = `${this.radius + 2}px`;
+        this.movePoint.style.height = `${this.radius + 2}px`;
         this.movePoint.style.borderRadius = "50%";
     }
 
@@ -362,8 +391,18 @@ function spectrumPercentToRgb(percent) {
 function locationToRgb(h, x, y) {
     const hsv_value = 1 - y / 300;
     const hsv_saturation = x / 300;
-    const lightness = (hsv_value / 2) * (2 - hsv_saturation);
+    const lightness = (hsv_value / 2 || 0) * (2 - hsv_saturation || 0);
     const saturation =
-        (hsv_value * hsv_saturation) / (1 - Math.abs(2 * lightness - 1));
+        (hsv_value * hsv_saturation) / (1 - Math.abs(2 * lightness - 1)) || 0;
     return hslToRgb(h, saturation, lightness);
+}
+
+function hslToHsv(h, s, l, v = s * Math.min(l, 1 - l) + l) {
+    return [h, v ? 2 - (2 * l) / v : 0, v];
+}
+
+function rgbToPos(r, g, b) {
+    const [h, s, l] = rgbToHsl(r, g, b);
+    const hsv = hslToHsv(h, s, l);
+    return [hsv[1] * 300, 300 * (1 - hsv[2]), 1 - h];
 }
