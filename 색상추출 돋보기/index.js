@@ -1,5 +1,8 @@
 window.onload = () => {
     new App();
+    new CircleRange({ color: "#ff0000" });
+    new CircleRange({ color: "#00ff00" });
+    new CircleRange({ color: "#0000ff" });
     function asd() {
         // chrome.tabs.executeScript(null, {
         //     file: "./js/index.js",
@@ -59,6 +62,25 @@ class App {
         window.addEventListener("mouseup", () => {
             this.isClick = false;
         });
+        this.rdom.addEventListener("input", () => {
+            const r = this.rdom.value;
+            const g = this.gdom.value;
+            const b = this.bdom.value;
+            this.changeRgb(r, g, b);
+        });
+        this.gdom.addEventListener("input", () => {
+            const r = this.rdom.value;
+            const g = this.gdom.value;
+            const b = this.bdom.value;
+            this.changeRgb(r, g, b);
+        });
+        this.bdom.addEventListener("input", () => {
+            const r = this.rdom.value;
+            const g = this.gdom.value;
+            const b = this.bdom.value;
+            this.changeRgb(r, g, b);
+        });
+        this.hexdom.innerText = rgbToHex(255, 0, 0);
         this.createMovePoint();
         if (!localStorage.getItem("qwer")) return;
     }
@@ -286,6 +308,118 @@ class GradientSlider {
             this.width,
             this.stageHeight
         );
+    }
+}
+
+class CircleRange {
+    constructor({ color }) {
+        this.prevAngle = null;
+        this.radius = 5;
+        this.x = 45 * Math.sin((-135 * Math.PI) / 180) + 45 + this.radius;
+        this.y = 45 * -Math.cos((-135 * Math.PI) / 180) + 50 + this.radius;
+        this.centerX = 50;
+        this.centerY = 50;
+        this.color = color;
+        this.flag = false;
+
+        this.value = 0;
+
+        this.isClick = false;
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = 100;
+        this.canvas.height = 100;
+        this.ctx = this.canvas.getContext("2d");
+        document.body.appendChild(this.canvas);
+
+        this.wrapper = document.createElement("div");
+        this.wrapper.style.width = "100px";
+        this.wrapper.style.height = "100px";
+        this.wrapper.style.position = "relative";
+        this.wrapper.style.border = "1px solid white";
+        this.wrapper.style.borderRadius = "50%";
+
+        this.movePoint = document.createElement("div");
+        this.movePoint.style.width = "10px";
+        this.movePoint.style.height = "10px";
+        this.movePoint.style.background = "white";
+        this.movePoint.style.transform = `translate(20px, 90px)`;
+
+        this.wrapper.appendChild(this.movePoint);
+
+        this.init();
+    }
+
+    init() {
+        this.canvas.addEventListener("mousedown", (e) => {
+            this.isClick = this.circleClick(e);
+        });
+        window.addEventListener("mouseup", () => {
+            this.isClick = false;
+        });
+        window.addEventListener("mousemove", this.move.bind(this));
+        this.movePoint.style.position = "absolute";
+
+        this.draw();
+    }
+
+    move(e) {
+        if (this.circleClick(e)) this.canvas.style.cursor = "pointer";
+        else this.canvas.style.cursor = "default";
+        if (!this.isClick) return;
+        const x = e.clientX - getDisLeft(this.canvas) - 5;
+        const y = e.clientY - getDisTop(this.canvas) - 5;
+        const deltaX = this.centerX - x;
+        const deltaY = this.centerY - y;
+        let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) - 90;
+        if (angle < -136 && angle > -180) {
+            angle = -135;
+            this.flag = true;
+        } else if (angle > -224 && angle <= -180) {
+            angle = -225;
+            this.flag = true;
+        } else this.flag = false;
+        this.x = 45 * Math.sin((angle * Math.PI) / 180) + 45 + this.radius;
+        this.y = 45 * -Math.cos((angle * Math.PI) / 180) + 50 + this.radius;
+        this.draw(angle);
+        console.log(1, angle);
+
+        if (this.flag) return;
+        angle = Math.ceil(angle);
+        angle += 135;
+        if (angle < 0) {
+            if (this.prevAngle === null) this.prevAngle = angle;
+            angle = Math.round(Math.abs(-angle + this.prevAngle) + 225);
+        }
+        console.log(angle);
+        this.value = Math.round(225 * (angle / 268));
+    }
+
+    draw(angle) {
+        this.ctx.beginPath();
+        this.ctx.clearRect(0, 0, 100, 100);
+        this.ctx.strokeStyle = this.color;
+        this.ctx.lineWidth = 10;
+        this.ctx.lineCap = "round";
+        this.ctx.arc(
+            this.centerX,
+            this.centerY + 5,
+            45,
+            ((-135 - 90) * Math.PI) / 180,
+            ((angle - 90) * Math.PI) / 180
+        );
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "white";
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+
+    circleClick(e) {
+        const distance = Math.sqrt(
+            Math.pow(e.offsetX - this.x, 2) + Math.pow(e.offsetY - this.y, 2)
+        );
+        return distance < this.radius;
     }
 }
 
