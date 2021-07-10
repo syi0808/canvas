@@ -1,12 +1,9 @@
 window.onload = () => {
     new App();
-    new CircleRange({ color: "#ff0000" });
-    new CircleRange({ color: "#00ff00" });
-    new CircleRange({ color: "#0000ff" });
     function asd() {
-        // chrome.tabs.executeScript(null, {
-        //     file: "./js/index.js",
-        // });
+        chrome.tabs.executeScript(null, {
+            file: "./js/index.js",
+        });
         localStorage.setItem("qwer", JSON.stringify(["asd", "qwe"]));
     }
 
@@ -32,6 +29,22 @@ class App {
 
         this.rgb = [255, 0, 0];
 
+        new CircleRange({
+            color: "#ff0000",
+            changeValue: this.changeValue.bind(this),
+            order: 1,
+        });
+        new CircleRange({
+            color: "#00ff00",
+            changeValue: this.changeValue.bind(this),
+            order: 2,
+        });
+        new CircleRange({
+            color: "#0000ff",
+            changeValue: this.changeValue.bind(this),
+            order: 3,
+        });
+
         this.rdom = document.getElementById("r");
         this.gdom = document.getElementById("g");
         this.bdom = document.getElementById("b");
@@ -41,6 +54,22 @@ class App {
         this.y = 0;
 
         this.init();
+    }
+
+    changeValue(value, order) {
+        switch (order) {
+            case 1:
+                this.rgb = [value, this.rgb[1], this.rgb[2]];
+                break;
+            case 2:
+                this.rgb = [this.rgb[0], value, this.rgb[2]];
+                break;
+            case 3:
+                this.rgb = [this.rgb[0], this.rgb[1], value];
+                break;
+        }
+        const [r, g, b] = this.rgb;
+        this.changeRgb(r, g, b);
     }
 
     init() {
@@ -312,7 +341,7 @@ class GradientSlider {
 }
 
 class CircleRange {
-    constructor({ color }) {
+    constructor({ color, changeValue, order }) {
         this.prevAngle = null;
         this.radius = 5;
         this.x = 45 * Math.sin((-135 * Math.PI) / 180) + 45 + this.radius;
@@ -321,6 +350,9 @@ class CircleRange {
         this.centerY = 50;
         this.color = color;
         this.flag = false;
+        this.order = order;
+
+        this.changeValue = changeValue;
 
         this.value = 0;
 
@@ -381,18 +413,13 @@ class CircleRange {
         } else this.flag = false;
         this.x = 45 * Math.sin((angle * Math.PI) / 180) + 45 + this.radius;
         this.y = 45 * -Math.cos((angle * Math.PI) / 180) + 50 + this.radius;
-        this.draw(angle);
-        console.log(1, angle);
 
-        if (this.flag) return;
-        angle = Math.ceil(angle);
-        angle += 135;
-        if (angle < 0) {
-            if (this.prevAngle === null) this.prevAngle = angle;
-            angle = Math.round(Math.abs(-angle + this.prevAngle) + 225);
-        }
-        console.log(angle);
-        this.value = Math.round(225 * (angle / 268));
+        this.draw(angle);
+
+        if (Math.abs(angle) > 200) angle = 270 - (-angle - 225);
+        else angle += 135;
+
+        this.changeValue(Math.round(255 * (angle / 270)), this.order);
     }
 
     draw(angle) {
