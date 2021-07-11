@@ -66,6 +66,36 @@
                 display: flex;
                 position: relative;
             }
+
+            .ww {
+                position: relative;
+                width: 100px;
+                height: 100px;
+            }
+
+            .ww input {
+                width: 60px;
+                border: none;
+                background: none;
+                font-size: 23px;
+                font-weight: 700;
+                color: white;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-40%, -50%);
+                outline: none;
+            }
+
+            input[type="number"] {
+                text-align: center;
+            }
+
+            /* input[type="number"]::-webkit-outer-spin-button,
+            input[type="number"]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            } */
         </style>
         <link
             data-font=""
@@ -77,9 +107,19 @@
     <body>
         <div style="height: 300px" id="paletteWrapper"></div>
         <span style="color: white" id="hex"></span>
-        <input id="r" type="number" max="255" min="0" value="255" />
-        <input id="g" type="number" max="255" min="0" value="0" />
-        <input id="b" type="number" max="255" min="0" value="0" />
+        <div
+            style="display: flex; width: 350px; justify-content: space-between"
+        >
+            <div class="ww" id="w1">
+                <input id="r" type="number" max="255" min="0" value="255" />
+            </div>
+            <div class="ww" id="w2">
+                <input id="g" type="number" max="255" min="0" value="0" />
+            </div>
+            <div class="ww" id="w3">
+                <input id="b" type="number" max="255" min="0" value="0" />
+            </div>
+        </div>
         <button id="asd">to img</button>
     </body>
 </html>

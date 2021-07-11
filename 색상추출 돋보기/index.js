@@ -29,22 +29,6 @@ class App {
 
         this.rgb = [255, 0, 0];
 
-        new CircleRange({
-            color: "#ff0000",
-            changeValue: this.changeValue.bind(this),
-            order: 1,
-        });
-        new CircleRange({
-            color: "#00ff00",
-            changeValue: this.changeValue.bind(this),
-            order: 2,
-        });
-        new CircleRange({
-            color: "#0000ff",
-            changeValue: this.changeValue.bind(this),
-            order: 3,
-        });
-
         this.rdom = document.getElementById("r");
         this.gdom = document.getElementById("g");
         this.bdom = document.getElementById("b");
@@ -91,27 +75,45 @@ class App {
         window.addEventListener("mouseup", () => {
             this.isClick = false;
         });
-        this.rdom.addEventListener("input", () => {
+        const eventCallback = () => {
             const r = this.rdom.value;
             const g = this.gdom.value;
             const b = this.bdom.value;
             this.changeRgb(r, g, b);
+        };
+        this.rdom.addEventListener("input", () => {
+            eventCallback();
+            this.rrange.move(this.rdom.value);
         });
         this.gdom.addEventListener("input", () => {
-            const r = this.rdom.value;
-            const g = this.gdom.value;
-            const b = this.bdom.value;
-            this.changeRgb(r, g, b);
+            eventCallback();
+            this.changeValue(this.gdom.value, 2);
         });
         this.bdom.addEventListener("input", () => {
-            const r = this.rdom.value;
-            const g = this.gdom.value;
-            const b = this.bdom.value;
-            this.changeRgb(r, g, b);
+            eventCallback();
+            this.changeValue(this.bdom.value, 3);
         });
         this.hexdom.innerText = rgbToHex(255, 0, 0);
         this.createMovePoint();
-        if (!localStorage.getItem("qwer")) return;
+
+        this.rrange = new CircleRange({
+            color: "#ff0000",
+            changeValue: this.changeValue.bind(this),
+            order: 1,
+            angle: 255,
+        });
+        this.grange = new CircleRange({
+            color: "#00ff00",
+            changeValue: this.changeValue.bind(this),
+            order: 2,
+            angle: 0,
+        });
+        this.brange = new CircleRange({
+            color: "#0000ff",
+            changeValue: this.changeValue.bind(this),
+            order: 3,
+            angle: 0,
+        });
     }
 
     move(e) {
@@ -341,11 +343,9 @@ class GradientSlider {
 }
 
 class CircleRange {
-    constructor({ color, changeValue, order }) {
+    constructor({ color, changeValue, order, angle }) {
         this.prevAngle = null;
         this.radius = 5;
-        this.x = 45 * Math.sin((-135 * Math.PI) / 180) + 45 + this.radius;
-        this.y = 45 * -Math.cos((-135 * Math.PI) / 180) + 50 + this.radius;
         this.centerX = 50;
         this.centerY = 50;
         this.color = color;
@@ -362,7 +362,7 @@ class CircleRange {
         this.canvas.width = 100;
         this.canvas.height = 100;
         this.ctx = this.canvas.getContext("2d");
-        document.body.appendChild(this.canvas);
+        document.getElementById(`w${order}`).appendChild(this.canvas);
 
         this.wrapper = document.createElement("div");
         this.wrapper.style.width = "100px";
@@ -380,11 +380,13 @@ class CircleRange {
         this.wrapper.appendChild(this.movePoint);
 
         this.init();
+        this.move(angle);
     }
 
     init() {
         this.canvas.addEventListener("mousedown", (e) => {
-            this.isClick = this.circleClick(e);
+            this.isClick = true;
+            this.move(e);
         });
         window.addEventListener("mouseup", () => {
             this.isClick = false;
@@ -396,14 +398,21 @@ class CircleRange {
     }
 
     move(e) {
-        if (this.circleClick(e)) this.canvas.style.cursor = "pointer";
-        else this.canvas.style.cursor = "default";
-        if (!this.isClick) return;
-        const x = e.clientX - getDisLeft(this.canvas) - 5;
-        const y = e.clientY - getDisTop(this.canvas) - 5;
-        const deltaX = this.centerX - x;
-        const deltaY = this.centerY - y;
-        let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) - 90;
+        let angle;
+        if (isNaN(e)) {
+            if (this.circleClick(e)) this.canvas.style.cursor = "pointer";
+            else this.canvas.style.cursor = "default";
+            if (!this.isClick) return;
+            const x = e.clientX - getDisLeft(this.canvas) - 5;
+            const y = e.clientY - getDisTop(this.canvas) - 5;
+            const deltaX = this.centerX - x;
+            const deltaY = this.centerY - y;
+            angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) - 90;
+        } else {
+            angle = Math.floor((e / 255) * 270);
+            if (e > 225) angle = angle - 225 - 270;
+            else angle -= 135;
+        }
         if (angle < -136 && angle > -180) {
             angle = -135;
             this.flag = true;
@@ -419,7 +428,7 @@ class CircleRange {
         if (Math.abs(angle) > 200) angle = 270 - (-angle - 225);
         else angle += 135;
 
-        this.changeValue(Math.round(255 * (angle / 270)), this.order);
+        this.changeValue(Math.ceil(255 * (angle / 270)), this.order);
     }
 
     draw(angle) {
@@ -524,7 +533,7 @@ function rgbToHsl(r, g, b) {
         l = (max + min) / 2;
 
     if (max == min) {
-        h = s = 0; // achromatic
+        h = s = 0;
     } else {
         var d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
